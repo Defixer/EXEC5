@@ -1,0 +1,622 @@
+package com.exercise4;
+
+import java.util.Scanner;
+import java.util.Random;
+import java.util.InputMismatchException;
+import java.lang.NumberFormatException;
+
+//OOP Collections
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.LinkedHashMap;
+import java.util.TreeMap;
+
+//read write input into txt file
+import java.io.File;
+
+//MAVEN single module
+//write to file (Apache Commons IO)
+import org.apache.commons.io.FileUtils;
+//search substring in string (Apache Common Lang3)
+import org.apache.commons.lang3.StringUtils;
+
+//MAVEN multi-module
+import com.exercise4.KeyValuePair;
+import com.exercise4.Validations;
+
+public class Functions{
+	private static Scanner scan = new Scanner(System.in);
+	private static final String EDIT_MENU = "editMenu",
+						EDIT_FLAG = "Edit",
+						EDIT_KEY = "editKey",
+						EDIT_VALUE = "editValue",
+						EDIT_BOTH = "editBoth",
+						KEY_FLAG = "key",
+						VALUE_FLAG = "value",
+						REPLACE_KEY = "replaceKey",
+						REPLACE_VALUE = "replaceValue",
+						ROW_FLAG = "Row",
+						ROW_INDEX_FLAG = "Row Index",
+						COLUMN_FLAG = "Column",
+						COLUMN_INDEX_FLAG = "Column Index",
+						NULL_FLAG = "",
+						PRINT_FLAG = "Print",
+						DELIMITER = "¦",
+						SPACE_DELIMITER = "©",
+						CARRIAGE_RETURN_DELIMITER = "\r\n",
+						ADD_ROW = "add row",
+						GENERATE_ROW_FLAG = "generate row",
+						SEARCH_FLAG = "Search";
+	private static final int NULL_ROW = 0,
+					NULL_COLUMN = 0,
+					ASCII_MIN = 32,
+					ASCII_MAX = 126,
+					KEY_VALUE_PAIR_LENGTH = 6;
+	
+	public static int inputDimensions(String dimensionType, String dimensionID, int rowLength, int columnLength){
+		
+		boolean indexInputInvalid = false;
+		int dimensionValue = 0;
+		
+		do{
+			indexInputInvalid = false;
+			
+			dimensionValue = Validations.isInputMismatch(dimensionType, dimensionID);
+			
+			if(dimensionID.equalsIgnoreCase("Row Index") | dimensionID.equalsIgnoreCase("Column Index")){
+				indexInputInvalid = Validations.isInvalid(dimensionType, dimensionID, dimensionValue, rowLength, columnLength);				
+			}
+			
+		}while(indexInputInvalid);
+		
+		return dimensionValue;
+	}
+	
+	public static void search(int rowLength, int columnLength, ArrayList<LinkedHashMap<String,String>> fullMap) throws Exception{
+		String searchStr = "";
+		boolean searchInputInvalid = false;
+		
+		int searchStrOccur = 0,
+				rowIndex = 0,
+				columnIndex = 0;
+				
+		//OOP
+		do{
+			searchInputInvalid = false;
+			System.out.print("Enter string to be searched: ");
+			String tempSearchStr = scan.nextLine();
+			searchInputInvalid = Validations.isInvalid("Search", tempSearchStr);		
+			searchStr = tempSearchStr;
+		}while(searchInputInvalid);
+		
+		System.out.println("Occurrence/s of '" + searchStr + "' \n\tfound at: ");
+		
+		map(SEARCH_FLAG,searchStr,fullMap,0,0);				
+	}
+
+	public static int searchString(String searchFlag, String keyValueCompare,int rowIndex, int columnIndex){
+		int fromIndex = 0,
+				searchStrCtr = 0,
+				searchStrOccur = 0;
+				
+		//Maven	single module
+		searchStrOccur = StringUtils.countMatches(keyValueCompare,searchFlag);		
+		
+		if(searchStrOccur > 0){
+			System.out.println("\t[" + rowIndex + "," + columnIndex + "]");
+		}
+		
+		return searchStrOccur;
+	}
+	
+	public static ArrayList<LinkedHashMap<String,String>> edit(int rowLength, int columnLength, ArrayList<LinkedHashMap<String,String>> fullMap) throws Exception{
+		
+		int rowIndex = 0, 
+				columnIndex = 0;
+		String keyValueChoice = "",
+						newKeyContent = "",
+						newValueContent = "",
+						currentKeyContent = "",
+						currentValueContent = "";	
+		KeyValuePair kvPair=null;	
+		
+		int rowIndexCtr = 0, 
+				columnIndexCtr = 0;
+		
+		//OOP
+		rowIndex = inputDimensions(ROW_FLAG, ROW_INDEX_FLAG, rowLength, columnLength);
+		columnIndex = inputDimensions(COLUMN_FLAG, COLUMN_INDEX_FLAG, rowLength, columnLength);
+		
+		keyValueChoice = editKeyValue(EDIT_MENU);
+		if(keyValueChoice.equalsIgnoreCase(EDIT_KEY)){
+			newKeyContent = editKeyValue(KEY_FLAG);
+		}
+		else if(keyValueChoice.equalsIgnoreCase(EDIT_VALUE)){
+			newValueContent = editKeyValue(VALUE_FLAG);
+		}
+		else if(keyValueChoice.equalsIgnoreCase(EDIT_BOTH)){
+			newKeyContent = editKeyValue(KEY_FLAG);
+			newValueContent = editKeyValue(VALUE_FLAG);
+		}
+
+		currentValueContent = map(EDIT_FLAG, REPLACE_KEY, fullMap, rowIndex, columnIndex);
+		currentKeyContent = map(EDIT_FLAG, REPLACE_VALUE, fullMap, rowIndex, columnIndex);
+		
+		//Maven multi-module placeholder
+		kvPair = new KeyValuePair(newKeyContent,newValueContent,currentKeyContent,currentKeyContent);
+
+		fullMap = implementKeyValue(fullMap, keyValueChoice, kvPair, rowIndex, columnIndex, rowLength, columnLength);
+				
+		return fullMap;
+	}	
+	
+	public static String editKeyValue(String editFlag){	
+		boolean editInputInvalid = false;
+		String newContent = "";
+		int keyValueChoice = 0;
+	
+		if(editFlag.equalsIgnoreCase(EDIT_MENU)){
+			do{
+				editInputInvalid = false;
+				System.out.print("Edit:");
+				System.out.print("\n\t[1] Key");
+				System.out.print("\n\t[2] Value");
+				System.out.print("\n\t[3] Key-Value");
+				int tempKeyValueChoice = Validations.isInputMismatch(EDIT_FLAG, NULL_FLAG);
+				keyValueChoice = tempKeyValueChoice;
+				if(keyValueChoice == 1){
+					return EDIT_KEY;			
+				}
+				else if(keyValueChoice == 2){
+					return EDIT_VALUE;
+				}
+				else if(keyValueChoice == 3){
+					return EDIT_BOTH;
+				}
+				else{
+					System.out.println("Invalid Edit Menu Input");
+					editInputInvalid = true;
+				}
+			}while(editInputInvalid);			
+		}
+		else if(editFlag.equalsIgnoreCase(KEY_FLAG) | editFlag.equalsIgnoreCase(VALUE_FLAG)){
+			do{
+				editInputInvalid = false;
+				
+				System.out.println();
+				System.out.print("\tEnter new " + editFlag + ": ");
+				String tempContent = scan.nextLine();
+				editInputInvalid = Validations.isInvalid(EDIT_FLAG, tempContent);
+				newContent = tempContent;
+			}while(editInputInvalid);
+		}
+		return newContent;	
+	}
+	
+	public static ArrayList<LinkedHashMap<String,String>> implementKeyValue(ArrayList<LinkedHashMap<String,String>> fullMap, String keyValueChoice, KeyValuePair kvPair, int rowIndex, int columnIndex, int rowLength, int columnLength){		
+									
+		int rowIndexCtr = 0,
+				columnIndexCtr = 0;		
+		String keyContent = "",
+						valueContent = "";
+		LinkedHashMap<String,String> columnMap = new LinkedHashMap<String,String>();
+		
+		for(LinkedHashMap<String,String> keyValuePairMap : fullMap){	
+			
+			for(Map.Entry<String,String> mapEntry : keyValuePairMap.entrySet()){
+				if(rowIndexCtr == rowIndex){
+					keyContent = mapEntry.getKey();
+					valueContent = mapEntry.getValue();
+				}
+				
+				//Maven multi-module placeholder
+				if(columnIndexCtr == columnIndex && rowIndexCtr == rowIndex){
+					if(keyValueChoice.equalsIgnoreCase(EDIT_KEY)){			
+						columnMap.put(kvPair.getNewKey(), kvPair.getCurrentValue());
+					}
+					else if(keyValueChoice.equalsIgnoreCase(EDIT_VALUE)){
+						columnMap.put(kvPair.getCurrentKey(), kvPair.getNewValue());
+					}
+					else if(keyValueChoice.equalsIgnoreCase(EDIT_BOTH)){
+						columnMap.put(kvPair.getNewKey(), kvPair.getNewValue());
+					}
+					columnIndexCtr++;
+					continue;
+					
+				}
+				if(rowIndexCtr == rowIndex){
+					columnMap.put(keyContent,valueContent);
+				}		
+				
+				columnIndexCtr++;
+			}
+			if(rowIndexCtr == rowIndex){
+				fullMap.remove(rowIndex);
+				fullMap.add(rowIndex,columnMap);
+				break;
+			}
+			columnIndexCtr = 0;
+			rowIndexCtr++;
+		}
+				
+		return fullMap;
+	}
+	
+	public static void print(int rowLength, int columnLength, ArrayList<LinkedHashMap<String,String>> fullMap) throws Exception{		
+		System.out.println();
+		System.out.print("   |\t  ");
+		for(int columnHeader = 0; columnHeader < columnLength; columnHeader++){
+			System.out.print(columnHeader + "      |      ");
+		}
+		System.out.println();
+		map(PRINT_FLAG, NULL_FLAG, fullMap, NULL_ROW, NULL_COLUMN);			
+	}
+	
+	public static String map(String mapFlag, String stringContent, ArrayList<LinkedHashMap<String,String>> fullMap, int rowLength, int columnLength) throws Exception{
+		int rowIndex = 0,
+				columnIndex = 0,
+				fromIndex = 0,
+				searchStrCtr = 0,
+				searchStrOccur = 0,
+				rowHeader = 0;
+		
+		for(LinkedHashMap<String,String> keyValuePairMap : fullMap){
+			if(mapFlag.equalsIgnoreCase(PRINT_FLAG)){
+				if(rowHeader <= 9){
+					System.out.print(rowHeader++ + "  |  ");
+				}	
+				else if(rowHeader > 9){
+					System.out.print(rowHeader++ + " |  ");
+				}
+			}			
+			for(Map.Entry<String,String> mapEntry : keyValuePairMap.entrySet()){
+				if(mapFlag.equalsIgnoreCase(PRINT_FLAG)){
+					System.out.print(mapEntry.getKey() + " , " + mapEntry.getValue() + "  |  ");
+				}
+				else if(mapFlag.equalsIgnoreCase(SEARCH_FLAG)){
+					String keyValueCompare = mapEntry.getKey();
+					keyValueCompare += mapEntry.getValue();
+					searchStrOccur += searchString(stringContent,keyValueCompare,rowIndex,columnIndex);
+					
+				}
+				else if(mapFlag.equalsIgnoreCase(EDIT_FLAG)){
+					if(columnIndex == columnLength && rowIndex == rowLength){
+						if(stringContent.equalsIgnoreCase(REPLACE_KEY)){
+							String currentValueContent = mapEntry.getValue();		
+
+							return currentValueContent;
+						}
+						else if(stringContent.equalsIgnoreCase(REPLACE_VALUE)){
+							String currentKeyContent = mapEntry.getKey();	
+							
+							return currentKeyContent;
+						}				
+					}
+				}
+				
+				if(mapFlag.equalsIgnoreCase(SEARCH_FLAG) | mapFlag.equalsIgnoreCase(EDIT_FLAG)){
+					columnIndex++;
+				}
+			}
+			if(mapFlag.equalsIgnoreCase(PRINT_FLAG)){
+					System.out.println("");
+				}
+				else if(mapFlag.equalsIgnoreCase(SEARCH_FLAG) | mapFlag.equalsIgnoreCase(EDIT_FLAG)){
+					columnIndex = 0;
+					rowIndex++;
+				}			
+		}
+		if(mapFlag.equalsIgnoreCase(SEARCH_FLAG)){
+			System.out.println("TOTAL OCCURENCE: " + searchStrOccur);
+		}
+		return "";
+	}
+	
+	public static ArrayList<LinkedHashMap<String,String>> reset(String flagId, int rowLength, int columnLength){
+		
+		int randomNumber = 0,
+				charCtr = 0,
+				range = 0;
+		char ch = 0;
+		
+		int maxColumnLength = columnLength - 1;
+		int maxRowLength = rowLength - 1;
+		
+		Random random = new Random();
+		
+		//OOP Collections
+		ArrayList<LinkedHashMap<String,String>> fullMap = new ArrayList<LinkedHashMap<String,String>>();
+		LinkedHashMap<String,String> columnMap;
+		
+		range = ASCII_MAX - ASCII_MIN + 1;
+		
+		for(int rowCtr = 0; rowCtr < rowLength; rowCtr++){
+			columnMap = new LinkedHashMap<String,String>();
+			
+			for(int columnCtr = 0; columnCtr < columnLength; columnCtr++){
+				String keyContent = "";
+				String valueContent = "";
+				charCtr = KEY_VALUE_PAIR_LENGTH;
+		
+				while(charCtr > 0 && charCtr <=6){
+					randomNumber = random.nextInt(range) + ASCII_MIN;
+			
+					ch = (char)randomNumber;
+			
+					if(charCtr > 3 && charCtr <= 6){					
+						keyContent += ch;
+					}
+					else if(charCtr > 0 && charCtr <= 3){
+						valueContent += ch;
+					}
+					charCtr--;						
+				}	
+				
+				//Maven multi-module placeholder
+				KeyValuePair kvPair = new KeyValuePair(keyContent,valueContent);
+				
+				columnMap.put(kvPair.getNewKey(),kvPair.getNewValue());
+			}
+			fullMap.add(columnMap);
+		}		
+		
+		return fullMap;		
+	}
+	
+	public static ArrayList<LinkedHashMap<String,String>> addRow(int rowLength, int columnLength, ArrayList<LinkedHashMap<String,String>> fullMap){
+		int addRowChoice = 0;
+		boolean addRowInputInvalid = false;
+		
+		
+		System.out.println("\nAdd Row");
+		System.out.println("\t[1] Generated Key-Value Pairs");
+		System.out.println("\t[2] User Inputted");
+		
+		do{
+			addRowInputInvalid = false;
+
+			System.out.println();
+			int tempAddRowChoice = Validations.isInputMismatch(ADD_ROW, NULL_FLAG);
+			addRowChoice = tempAddRowChoice;
+			
+		}while(addRowInputInvalid);
+		
+		if(addRowChoice == 1){
+			fullMap = addGeneratedRow(rowLength, columnLength, fullMap);
+		}
+		else if(addRowChoice == 2){
+			fullMap = addInputtedRow(rowLength, columnLength, fullMap);
+		}
+		
+		return fullMap;
+	
+	}
+	
+	public static ArrayList<LinkedHashMap<String,String>> addGeneratedRow(int rowLength, int columnLength, ArrayList<LinkedHashMap<String,String>> fullMap){
+		int randomNumber = 0,
+				charCtr = 0,
+				range = 0;
+		char ch = 0;
+		
+		Random random = new Random();
+		
+		LinkedHashMap<String,String> columnMap = new LinkedHashMap<String,String>();
+		
+		range = ASCII_MAX - ASCII_MIN + 1;
+		
+		for(int columnCtr = 0; columnCtr < columnLength; columnCtr++){
+			String keyContent = "";
+			String valueContent = "";
+			charCtr = KEY_VALUE_PAIR_LENGTH;
+	
+			while(charCtr > 0 && charCtr <=6){
+				randomNumber = random.nextInt(range) + ASCII_MIN;
+		
+				ch = (char)randomNumber;
+		
+				if(charCtr > 3 && charCtr <= 6){					
+					keyContent += ch;
+				}
+				else if(charCtr > 0 && charCtr <= 3){
+					valueContent += ch;
+				}
+				charCtr--;						
+			}
+			
+			//Maven multi-module placeholder
+			KeyValuePair kvPair = new KeyValuePair(keyContent,valueContent);
+				
+			columnMap.put(kvPair.getNewKey(),kvPair.getNewValue());		
+		}
+		fullMap.add(columnMap);		
+		
+		return fullMap;
+	
+	}
+	
+	public static ArrayList<LinkedHashMap<String,String>> addInputtedRow(int rowLength, int columnLength, ArrayList<LinkedHashMap<String,String>> fullMap){
+
+		int columnIndex = 0;
+		boolean userInputInvalid = false;
+		String keyContent = "", 
+						valueContent = "";
+				
+		int maxRowLength = rowLength - 1;
+		int maxColumnLength = columnLength - 1;
+		
+		LinkedHashMap<String,String> columnMap = new LinkedHashMap<String,String>();		
+
+		System.out.println("\t\tUser Inputted:");
+		while(columnIndex<columnLength){
+			
+			System.out.println("\t\t\t[" + (maxRowLength) + ", " + columnIndex + "] of [" + (maxRowLength) + ", " + (maxColumnLength) + "]");
+			
+			do{
+				userInputInvalid = false;
+				System.out.print("\t\t\tEnter key: ");
+				String tempKeyContent = scan.nextLine();				
+				userInputInvalid = Validations.isInvalid(ADD_ROW, tempKeyContent);
+				keyContent = tempKeyContent;
+				
+			}while(userInputInvalid);
+			
+			do{
+				System.out.print("\t\t\tEnter value: ");
+				String tempValueContent = scan.nextLine();
+				userInputInvalid = Validations.isInvalid(ADD_ROW, tempValueContent);
+				valueContent = tempValueContent;
+				
+			}while(userInputInvalid);
+			System.out.println();
+			
+			KeyValuePair kvPair = new KeyValuePair(keyContent,valueContent);
+			
+			columnMap.put(kvPair.getNewKey(),kvPair.getNewValue());
+			columnIndex++;
+		}
+		
+		fullMap.add(columnMap);
+		
+		return 	fullMap;
+	}	
+	
+	public static ArrayList<LinkedHashMap<String,String>> sort(ArrayList<LinkedHashMap<String,String>> fullMap, int rowLength, int columnLength){
+		
+		int rowIndex = 0;
+		
+		while(rowIndex < rowLength){
+			fullMap = sortRowByKeyAsc(fullMap, rowIndex, columnLength);
+			rowIndex++;
+		}
+		
+		return fullMap;		
+	}
+	
+	public static ArrayList<LinkedHashMap<String,String>> sortRowByKeyAsc(ArrayList<LinkedHashMap<String,String>> fullMap, int rowIndex, int columnLength){
+	
+		int rowIndexCtr = 0;
+		String keyContent = "",
+						valueContent = "";
+						
+		TreeMap<String,String> sortedMap = new TreeMap<String,String>();
+		LinkedHashMap<String,String> columnMap = new LinkedHashMap<String,String>();
+		
+		for(LinkedHashMap<String,String> keyValuePairMap : fullMap){	
+			
+			for(Map.Entry<String,String> mapEntry : keyValuePairMap.entrySet()){
+				if(rowIndexCtr == rowIndex){
+					keyContent = mapEntry.getKey();
+					valueContent = mapEntry.getValue();
+					sortedMap.put(keyContent,valueContent);
+				}				
+			}
+			if(rowIndexCtr == rowIndex){
+				columnMap.putAll(sortedMap);
+				fullMap.remove(rowIndex);
+				fullMap.add(rowIndex,columnMap);
+				break;
+			}
+			rowIndexCtr++;
+		}
+		
+		return fullMap;
+	}
+	
+	public static int readColumnLength(String fileName) throws Exception{		
+		int columnCtr = 0,
+				totalColumns = 0,
+				fromIndex = 0;
+		
+		String fileFirstLine = "";
+		
+		//Maven single module
+		List<String> fileContents = FileUtils.readLines(new File(fileName));
+		fileFirstLine = fileContents.get(0);
+		
+		//Maven single module
+		totalColumns = StringUtils.countMatches(fileFirstLine,DELIMITER);
+		
+		return totalColumns;
+	}
+	
+	public static int readRowLength(String fileName) throws Exception{		
+		int totalRows = 0;
+		
+		List<String> fileContents = FileUtils.readLines(new File(fileName));
+		
+		totalRows = fileContents.size();
+		
+		return totalRows;
+	}
+	
+	public static ArrayList<LinkedHashMap<String,String>> readFromFile(int rowLength, int columnLength, String fileName) throws Exception{
+		ArrayList<LinkedHashMap<String,String>> fromFileMap = new ArrayList<LinkedHashMap<String,String>>();
+		LinkedHashMap<String, String> columnMap = new LinkedHashMap<String,String>();
+		
+		String keyRead = "", 
+					valueRead = "",
+					nullRead = "";
+		int rowIndex = 0, 
+				columnIndex = 0;
+		
+		Scanner read = new Scanner(new File(fileName));
+		read.useDelimiter("¦|©|\\r\\n");
+		
+		while(read.hasNext() & rowIndex<rowLength){
+
+			keyRead = read.next();
+			valueRead = read.next();				
+			
+			columnMap.put(keyRead,valueRead);
+			columnIndex++;
+
+			if(columnIndex >= columnLength){
+				fromFileMap.add(rowIndex, columnMap);
+				columnMap = new LinkedHashMap<String,String>();
+				columnIndex = 0;
+				rowIndex++;
+			}
+		}
+		read.close();
+		
+		return fromFileMap;
+	}
+	
+	public static void writeToFile(ArrayList<LinkedHashMap<String,String>> fullMap, String fileName, int rowLength, int columnLength) throws Exception{
+		File file = new File(fileName);
+		
+		String keyContent = "", 
+					valueContent = "", 
+					rowEntry = "";		
+		int rowIndex = 0, 
+				columnIndex = 0;
+		boolean doAppend = true;
+				
+		for(LinkedHashMap<String,String> keyValuePairMap : fullMap){	
+			
+			for(Map.Entry<String,String> mapEntry : keyValuePairMap.entrySet()){
+				keyContent = mapEntry.getKey();
+				valueContent = mapEntry.getValue();
+				rowEntry += keyContent + DELIMITER + valueContent;
+				if(columnIndex < columnLength && columnIndex != columnLength-1){
+					rowEntry += SPACE_DELIMITER;
+				}
+				columnIndex++;
+			}
+			
+			if(rowIndex == 0){
+				//Maven single module
+				FileUtils.writeStringToFile(file, rowEntry);
+			}
+			else if(rowIndex > 0){
+				rowEntry = CARRIAGE_RETURN_DELIMITER + rowEntry;
+				//Maven single module
+				FileUtils.writeStringToFile(file, rowEntry, doAppend);
+			}			
+			columnIndex = 0;
+			rowIndex++;
+			rowEntry = "";
+		}
+	}	
+}
